@@ -1,5 +1,8 @@
 #[path = "constants.rs"]
 mod constants;
+#[cfg(test)]
+#[path = "tests.rs"]
+mod tests;
 #[path = "types.rs"]
 pub mod types;
 
@@ -183,6 +186,7 @@ impl App {
             Action::Back | Action::Cancel => {
                 self.view = View::Navigator;
                 self.results = None;
+                self.search = None;
             }
             Action::Leave => {
                 let dir = results
@@ -253,6 +257,9 @@ impl App {
         // The file may have changed, or vim may have created new files
         self.navigator.refresh();
         self.preview_cache = None;
+        if let Some(results) = self.results.as_mut() {
+            results.reload_preview();
+        }
     }
 
     fn error(&mut self, text: String) {

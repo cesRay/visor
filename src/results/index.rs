@@ -72,14 +72,29 @@ impl Results {
         self.selected_hit()?.path.parent().map(PathBuf::from)
     }
 
-    /// Preview of the selected file, loaded once per selection
-    pub fn preview(&mut self) -> Option<&Preview> {
-        let path = self.selected_hit()?.path.clone();
+    /// Loads the preview of the selected file, once per selection
+    pub fn load_preview(&mut self) {
+        let Some(path) = self.selected_hit().map(|h| h.path.clone()) else {
+            return;
+        };
         if self.preview.as_ref().is_none_or(|(p, _)| *p != path) {
             let loaded = preview::load(&path, false);
             self.preview = Some((path, loaded));
         }
-        self.preview.as_ref().map(|(_, p)| p)
+    }
+
+    /// The preview loaded by `load_preview`, if it belongs to the selection
+    pub fn preview(&self) -> Option<&Preview> {
+        let hit = self.selected_hit()?;
+        self.preview
+            .as_ref()
+            .filter(|(p, _)| *p == hit.path)
+            .map(|(_, p)| p)
+    }
+
+    /// Forgets the loaded preview so it is read again, e.g. after editing in vim
+    pub fn reload_preview(&mut self) {
+        self.preview = None;
     }
 
     fn select(&mut self, index: usize) {
@@ -91,7 +106,11 @@ impl Results {
         self.preview_scroll = self
             .selected_hit()
             .and_then(|h| h.matches.first())
-            .map(|m| m.line_number.saturating_sub(PREVIEW_CONTEXT_LINES) as u16)
+            .map(|m| {
+                m.line_number
+                    .saturating_sub(PREVIEW_CONTEXT_LINES)
+                    .min(u16::MAX as u64) as u16
+            })
             .unwrap_or(0);
     }
 }

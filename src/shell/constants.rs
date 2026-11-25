@@ -2,11 +2,11 @@
 /// the directory visor wrote there (nothing is written when the user presses Esc).
 pub const POSIX_INIT: &str = r#"visor() {
   local tmp dir code
-  tmp="$(mktemp -t visor-cwd.XXXXXX)" || return 1
+  tmp="$(command mktemp -t visor-cwd.XXXXXX)" || return 1
   command visor --cwd-file "$tmp" "$@"
   code=$?
-  dir="$(cat -- "$tmp" 2>/dev/null)"
-  rm -f -- "$tmp"
+  dir="$(command cat -- "$tmp" 2>/dev/null)"
+  command rm -f -- "$tmp"
   if [ -n "$dir" ] && [ -d "$dir" ] && [ "$dir" != "$PWD" ]; then
     builtin cd -- "$dir" || return 1
   fi
@@ -16,11 +16,11 @@ pub const POSIX_INIT: &str = r#"visor() {
 
 /// Same wrapper for fish
 pub const FISH_INIT: &str = r#"function visor
-    set -l tmp (mktemp -t visor-cwd.XXXXXX); or return 1
+    set -l tmp (command mktemp -t visor-cwd.XXXXXX); or return 1
     command visor --cwd-file $tmp $argv
     set -l code $status
-    set -l dir (cat -- $tmp 2>/dev/null)
-    rm -f -- $tmp
+    set -l dir (command cat -- $tmp 2>/dev/null)
+    command rm -f -- $tmp
     if test -n "$dir"; and test -d "$dir"; and test "$dir" != "$PWD"
         builtin cd -- $dir; or return 1
     end

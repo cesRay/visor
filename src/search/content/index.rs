@@ -1,7 +1,7 @@
 use std::sync::Mutex;
 use std::sync::atomic::{AtomicBool, Ordering};
 
-use grep_searcher::sinks::UTF8;
+use grep_searcher::sinks::Lossy;
 use grep_searcher::{BinaryDetection, SearcherBuilder};
 use ignore::WalkState;
 
@@ -43,7 +43,8 @@ pub fn search(
             let result = searcher.search_path(
                 &matcher,
                 path,
-                UTF8(|line_number, line_content| {
+                // Lossy: a line with invalid UTF-8 must not drop the file's other matches
+                Lossy(|line_number, line_content| {
                     file_matches.push(MatchInfo {
                         line_number,
                         match_ranges: matcher::find_ranges(&matcher, line_content),

@@ -22,3 +22,16 @@ fn change_dir_writes_the_path_to_the_cwd_file() {
         tmp.path().to_string_lossy()
     );
 }
+
+#[cfg(unix)]
+#[test]
+fn change_dir_keeps_non_utf8_bytes() {
+    use std::ffi::OsStr;
+    use std::os::unix::ffi::OsStrExt;
+
+    let tmp = tempfile::tempdir().unwrap();
+    let dir = tmp.path().join(OsStr::from_bytes(b"caf\xe9"));
+    let file = tmp.path().join("cwd");
+    change_dir(&dir, Some(&file)).unwrap();
+    assert_eq!(fs::read(file).unwrap(), dir.as_os_str().as_bytes());
+}

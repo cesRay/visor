@@ -67,6 +67,8 @@ visor -m "fn main" -c -e # case-sensitive, whole-word search
 | `-c, --case-sensitive` | Start with case-sensitive search |
 | `-e, --exact` | Start with exact (whole-word) search |
 | `init <SHELL>` | Print the shell function for `zsh`, `bash` or `fish` |
+
+To open a directory that is literally called `init`, write `visor ./init`.
 | `-h, --help` | Print help |
 | `-V, --version` | Print version |
 

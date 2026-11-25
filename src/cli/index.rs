@@ -50,6 +50,13 @@ pub fn run() -> anyhow::Result<()> {
     ratatui::restore();
 
     if let ExitOutcome::ChangeDir(dir) = outcome? {
+        // Paths inside visor are canonical (e.g. /private/tmp for /tmp). If the
+        // target is where the shell already is, do nothing, so the shell keeps
+        // its own spelling of the path.
+        let here = std::env::current_dir().and_then(|d| d.canonicalize()).ok();
+        if here.as_deref() == Some(dir.as_path()) {
+            return Ok(());
+        }
         shell::change_dir(&dir, cli.cwd_file.as_deref())
             .with_context(|| format!("could not hand {} to the shell", dir.display()))?;
     }

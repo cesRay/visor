@@ -109,3 +109,20 @@ fn cancelled_search_returns_nothing() {
     let req = request(SearchKind::Content, "todo", &tmp, SearchOptions::default());
     assert!(run(&req, &AtomicBool::new(true)).unwrap().is_empty());
 }
+
+#[test]
+fn invalid_utf8_line_keeps_the_files_other_matches() {
+    let tmp = tree();
+    fs::write(
+        tmp.path().join("latin1.txt"),
+        b"todo one\ncaf\xe9 todo two\n",
+    )
+    .unwrap();
+    let req = request(SearchKind::Content, "todo", &tmp, SearchOptions::default());
+    let results = run(&req, &AtomicBool::new(false)).unwrap();
+    let latin1 = results
+        .iter()
+        .find(|f| f.relative_path == "latin1.txt")
+        .unwrap();
+    assert_eq!(latin1.matches.len(), 2);
+}

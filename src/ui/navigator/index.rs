@@ -11,7 +11,7 @@ use crate::app::App;
 use crate::navigator::types::{Entry, EntryKind};
 use crate::preview::{self, types::Preview};
 use crate::ui::{rows, theme};
-use constants::{NARROW_WIDTH, TAB_WIDTH};
+use constants::NARROW_WIDTH;
 
 /// Three ranger-style columns: parent | current directory | preview
 pub fn render(frame: &mut Frame, area: Rect, app: &mut App) {
@@ -108,7 +108,7 @@ fn render_preview(frame: &mut Frame, area: Rect, app: &mut App) {
             .map(|(i, line)| {
                 Line::from(vec![
                     Span::styled(format!("{:>4} ", i + 1), theme::LINE_NUMBER),
-                    Span::raw(line.replace('\t', &" ".repeat(TAB_WIDTH))),
+                    Span::raw(rows::expand_tabs(line, &[]).0),
                 ])
             })
             .collect(),
