@@ -99,8 +99,8 @@ fn active_selection_and_parent_marker_use_different_colours() {
         .collect();
     assert_eq!(
         marker_colours,
-        [Color::Rgb(255, 180, 50), Color::Rgb(0xCF, 0x42, 0x5C)],
-        "parent marker is amber, active selection is #CF425C"
+        [Color::Rgb(255, 180, 50), Color::Rgb(0xB5, 0x36, 0x3B)],
+        "parent marker is amber, active selection is #B5363B"
     );
 }
 
@@ -113,5 +113,5 @@ fn title_uses_the_active_selection_colour() {
     let buffer = terminal.backend().buffer();
     // "  visor  " starts at column 0, so the "v" is at column 2
     assert_eq!(buffer[(2, 0)].symbol(), "v");
-    assert_eq!(buffer[(2, 0)].fg, Color::Rgb(0xCF, 0x42, 0x5C));
+    assert_eq!(buffer[(2, 0)].fg, Color::Rgb(0xB5, 0x36, 0x3B));
 }

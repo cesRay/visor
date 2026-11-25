@@ -8,7 +8,7 @@ pub const FILE_LIST_BASE: Style = Style::reset().fg(Color::DarkGray);
 
 /// The selection your keys move: the middle navigator column and the results list
 pub const ACTIVE_SELECTION: Style = Style::reset()
-    .fg(Color::Rgb(0xCF, 0x42, 0x5C))
+    .fg(Color::Rgb(0xB5, 0x36, 0x3B))
     .add_modifier(Modifier::BOLD);
 
 /// The "visor" title in the header, in the same colour as the active selection
