@@ -15,7 +15,7 @@ use crate::ui::theme;
 use constants::{NAVIGATOR_HINTS, RESULTS_HINTS, SPINNER_FRAMES};
 
 pub fn render_header(frame: &mut Frame, area: Rect, app: &App) {
-    let mut spans = vec![Span::styled("  visor  ", theme::STATUS_TEXT)];
+    let mut spans = vec![Span::styled("  visor  ", theme::TITLE)];
 
     match (app.view, &app.results) {
         (View::Results, Some(results)) => {

@@ -103,3 +103,15 @@ fn active_selection_and_parent_marker_use_different_colours() {
         "parent marker is amber, active selection is #CF425C"
     );
 }
+
+#[test]
+fn title_uses_the_active_selection_colour() {
+    let tmp = project();
+    let mut app = App::new(tmp.path().join("proj"), SearchOptions::default());
+    let mut terminal = Terminal::new(TestBackend::new(100, 12)).unwrap();
+    terminal.draw(|f| draw(f, &mut app)).unwrap();
+    let buffer = terminal.backend().buffer();
+    // "  visor  " starts at column 0, so the "v" is at column 2
+    assert_eq!(buffer[(2, 0)].symbol(), "v");
+    assert_eq!(buffer[(2, 0)].fg, Color::Rgb(0xCF, 0x42, 0x5C));
+}

@@ -11,6 +11,9 @@ pub const ACTIVE_SELECTION: Style = Style::reset()
     .fg(Color::Rgb(0xCF, 0x42, 0x5C))
     .add_modifier(Modifier::BOLD);
 
+/// The "visor" title in the header, in the same colour as the active selection
+pub const TITLE: Style = ACTIVE_SELECTION;
+
 /// Marks the current directory inside the parent column; it is not movable
 pub const PARENT_SELECTION: Style = Style::reset()
     .fg(Color::Rgb(255, 180, 50))
