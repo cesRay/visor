@@ -18,6 +18,7 @@ pub struct App {
     pub preview_scroll: u16,
     pub preview_cache: Option<(PathBuf, String)>,
     pub base_path: PathBuf,
+    pub file_list_scroll: usize,
 }
 
 impl App {
@@ -31,6 +32,7 @@ impl App {
             preview_scroll: 0,
             preview_cache: None,
             base_path,
+            file_list_scroll: 0,
         }
     }
 

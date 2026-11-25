@@ -4,11 +4,10 @@ pub const BORDER: Style = Style::new().fg(Color::DarkGray);
 
 pub const BORDER_FOCUSED: Style = Style::new().fg(Color::Rgb(100, 100, 200));
 
-pub const FILE_LIST_BASE: Style = Style::new().fg(Color::White);
+pub const FILE_LIST_BASE: Style = Style::reset().fg(Color::DarkGray);
 
-pub const SELECTED_FILE: Style = Style::new()
-    .fg(Color::White)
-    .bg(Color::Rgb(60, 60, 120))
+pub const SELECTED_FILE: Style = Style::reset()
+    .fg(Color::Rgb(255, 180, 50))
     .add_modifier(Modifier::BOLD);
 
 pub const LINE_NUMBER: Style = Style::new().fg(Color::DarkGray);
@@ -39,3 +38,7 @@ pub const MATCH_COUNT: Style = Style::new().fg(Color::Rgb(180, 180, 255));
 pub const NO_RESULTS: Style = Style::new()
     .fg(Color::DarkGray)
     .add_modifier(Modifier::ITALIC);
+
+pub const PREVIEW_TITLE: Style = Style::new()
+    .fg(Color::Rgb(255, 180, 50))
+    .add_modifier(Modifier::BOLD);

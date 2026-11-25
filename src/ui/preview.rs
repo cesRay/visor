@@ -35,6 +35,7 @@ pub fn render(frame: &mut Frame, area: Rect, app: &App) {
             Block::default()
                 .borders(Borders::ALL)
                 .title(title)
+                .title_style(theme::PREVIEW_TITLE)
                 .border_style(theme::BORDER),
         )
         .scroll((app.preview_scroll, 0));
