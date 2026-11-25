@@ -4,7 +4,7 @@ use std::time::Duration;
 use ratatui::DefaultTerminal;
 use ratatui::widgets::ListState;
 
-use crate::event::{self, AppAction};
+use crate::input::{self, types::AppAction};
 use crate::search;
 use crate::search::types::{FileMatches, SearchOptions};
 use crate::ui;
@@ -43,7 +43,7 @@ impl App {
     }
 
     pub fn run_search(&mut self) {
-        match search::engine::search(&self.base_path, &self.query, &self.search_options) {
+        match search::content::search(&self.base_path, &self.query, &self.search_options) {
             Ok(results) => {
                 self.results = results;
                 if !self.results.is_empty() {
@@ -70,7 +70,7 @@ impl App {
         while !self.should_quit {
             terminal.draw(|frame| ui::draw(frame, self))?;
 
-            match event::poll(Duration::from_millis(80))? {
+            match input::poll(Duration::from_millis(80))? {
                 AppAction::Quit => self.should_quit = true,
                 AppAction::MoveUp => self.select_previous_file(),
                 AppAction::MoveDown => self.select_next_file(),

@@ -1,8 +1,11 @@
-pub mod file_list;
-pub mod layout;
-pub mod preview;
-pub mod status_bar;
-pub mod theme;
+#[path = "layout/index.rs"]
+mod layout;
+#[path = "results/index.rs"]
+mod results;
+#[path = "status_bar/index.rs"]
+mod status_bar;
+#[path = "theme/index.rs"]
+mod theme;
 
 use ratatui::Frame;
 
@@ -12,7 +15,6 @@ pub fn draw(frame: &mut Frame, app: &mut App) {
     let areas = layout::build(frame.area());
 
     status_bar::render_header(frame, areas.header, app);
-    file_list::render(frame, areas.file_list, app);
-    preview::render(frame, areas.preview, app);
+    results::render(frame, areas.body, app);
     status_bar::render_footer(frame, areas.footer);
 }

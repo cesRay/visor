@@ -3,7 +3,7 @@ use ratatui::layout::Rect;
 use ratatui::text::{Line, Span};
 use ratatui::widgets::{Block, Borders, Paragraph};
 
-use super::theme;
+use crate::ui::theme;
 use crate::app::App;
 
 pub fn render(frame: &mut Frame, area: Rect, app: &App) {

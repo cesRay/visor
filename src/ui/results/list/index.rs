@@ -3,7 +3,7 @@ use ratatui::layout::Rect;
 use ratatui::style::Style;
 use ratatui::widgets::{Block, Borders};
 
-use super::theme;
+use crate::ui::theme;
 use crate::app::App;
 
 pub fn render(frame: &mut Frame, area: Rect, app: &mut App) {

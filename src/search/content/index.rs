@@ -1,48 +1,19 @@
 use std::path::Path;
 use std::sync::Mutex;
 
-use grep_matcher::Matcher;
-use grep_regex::RegexMatcherBuilder;
-use grep_searcher::sinks::UTF8;
 use grep_searcher::SearcherBuilder;
+use grep_searcher::sinks::UTF8;
 use ignore::WalkBuilder;
 
-use super::types::{FileMatches, MatchInfo, SearchOptions};
-
-#[derive(Debug)]
-pub enum SearchError {
-    Regex(grep_regex::Error),
-}
-
-impl std::fmt::Display for SearchError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            SearchError::Regex(e) => write!(f, "Regex error: {e}"),
-        }
-    }
-}
-
-impl std::error::Error for SearchError {}
-
-impl From<grep_regex::Error> for SearchError {
-    fn from(e: grep_regex::Error) -> Self {
-        SearchError::Regex(e)
-    }
-}
+use super::matcher;
+use super::types::{FileMatches, MatchInfo, SearchError, SearchOptions};
 
 pub fn search(
     base_path: &Path,
     query: &str,
     options: &SearchOptions,
 ) -> Result<Vec<FileMatches>, SearchError> {
-    let mut builder = RegexMatcherBuilder::new();
-    builder.case_insensitive(!options.case_sensitive);
-
-    if options.exact_match {
-        builder.word(true);
-    }
-
-    let matcher = builder.build(query)?;
+    let matcher = matcher::build(query, options)?;
     let ext_filter = options.extension_filter.clone();
     let base = base_path.to_path_buf();
 
@@ -88,7 +59,7 @@ pub fn search(
                 &matcher,
                 path,
                 UTF8(|line_number, line_content| {
-                    let match_ranges = find_match_ranges(&matcher, line_content);
+                    let match_ranges = matcher::find_ranges(&matcher, line_content);
                     file_matches.push(MatchInfo {
                         line_number,
                         line_content: line_content.trim_end_matches('\n').to_string(),
@@ -122,13 +93,4 @@ pub fn search(
     let mut results = all_results.into_inner().unwrap();
     results.sort_by(|a, b| a.relative_path.cmp(&b.relative_path));
     Ok(results)
-}
-
-fn find_match_ranges(matcher: &impl Matcher, line: &str) -> Vec<(usize, usize)> {
-    let mut ranges = Vec::new();
-    let _ = matcher.find_iter(line.as_bytes(), |m| {
-        ranges.push((m.start(), m.end()));
-        true
-    });
-    ranges
 }

@@ -1,11 +1,9 @@
+#[path = "types.rs"]
+mod types;
+
 use ratatui::layout::{Constraint, Layout, Rect};
 
-pub struct AppLayout {
-    pub header: Rect,
-    pub file_list: Rect,
-    pub preview: Rect,
-    pub footer: Rect,
-}
+use types::AppLayout;
 
 pub fn build(area: Rect) -> AppLayout {
     let [header, body, footer] = Layout::vertical([
@@ -15,16 +13,9 @@ pub fn build(area: Rect) -> AppLayout {
     ])
     .areas(area);
 
-    let [file_list, preview] = Layout::horizontal([
-        Constraint::Percentage(30),
-        Constraint::Percentage(70),
-    ])
-    .areas(body);
-
     AppLayout {
         header,
-        file_list,
-        preview,
+        body,
         footer,
     }
 }

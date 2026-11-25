@@ -43,3 +43,25 @@ impl Default for SearchOptions {
         }
     }
 }
+
+/// Errors that a search can return
+#[derive(Debug)]
+pub enum SearchError {
+    Regex(grep_regex::Error),
+}
+
+impl std::fmt::Display for SearchError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            SearchError::Regex(e) => write!(f, "Regex error: {e}"),
+        }
+    }
+}
+
+impl std::error::Error for SearchError {}
+
+impl From<grep_regex::Error> for SearchError {
+    fn from(e: grep_regex::Error) -> Self {
+        SearchError::Regex(e)
+    }
+}

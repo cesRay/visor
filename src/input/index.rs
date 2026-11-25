@@ -1,19 +1,11 @@
+#[path = "types.rs"]
+pub mod types;
+
 use std::time::Duration;
 
 use crossterm::event::{self, Event, KeyCode, KeyEventKind};
 
-pub enum AppAction {
-    Quit,
-    MoveUp,
-    MoveDown,
-    ScrollPreviewUp,
-    ScrollPreviewDown,
-    OpenFile,
-    ToggleCaseSensitive,
-    ToggleExactMatch,
-    Tick,
-    None,
-}
+use types::AppAction;
 
 pub fn poll(timeout: Duration) -> std::io::Result<AppAction> {
     if event::poll(timeout)? {
