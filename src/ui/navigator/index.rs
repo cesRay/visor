@@ -52,7 +52,13 @@ fn render_parent(frame: &mut Frame, area: Rect, app: &App) {
     let scroll = selected
         .map(|s| s.saturating_sub(inner.height as usize / 2))
         .unwrap_or(0);
-    let lines = entry_lines(&nav.parent_entries, selected, scroll, inner.height);
+    let lines = entry_lines(
+        &nav.parent_entries,
+        selected,
+        theme::PARENT_SELECTION,
+        scroll,
+        inner.height,
+    );
     rows::render(frame, inner, lines, theme::FILE_LIST_BASE);
 }
 
@@ -85,7 +91,13 @@ fn render_current(frame: &mut Frame, area: Rect, app: &mut App) {
     }
 
     nav.scroll = rows::keep_visible(nav.selected, inner.height as usize, nav.scroll);
-    let lines = entry_lines(&nav.entries, Some(nav.selected), nav.scroll, inner.height);
+    let lines = entry_lines(
+        &nav.entries,
+        Some(nav.selected),
+        theme::ACTIVE_SELECTION,
+        nav.scroll,
+        inner.height,
+    );
     rows::render(frame, inner, lines, theme::FILE_LIST_BASE);
 }
 
@@ -99,7 +111,9 @@ fn render_preview(frame: &mut Frame, area: Rect, app: &mut App) {
     let preview = preview::cached(&mut app.preview_cache, &entry, app.navigator.show_hidden);
 
     let lines = match preview {
-        Preview::Dir(entries) => entry_lines(entries, None, 0, inner.height),
+        Preview::Dir(entries) => {
+            entry_lines(entries, None, theme::ACTIVE_SELECTION, 0, inner.height)
+        }
         Preview::Message(text) => vec![notice(text)],
         Preview::Text(text) => text
             .lines()
@@ -132,6 +146,7 @@ fn column(frame: &mut Frame, area: Rect, title: &str, border: Style) -> Rect {
 fn entry_lines(
     entries: &[Entry],
     selected: Option<usize>,
+    selected_style: Style,
     scroll: usize,
     height: u16,
 ) -> Vec<Line<'static>> {
@@ -150,7 +165,7 @@ fn entry_lines(
                 label.push_str(" @");
             }
             let style = if is_selected {
-                theme::SELECTED_FILE
+                selected_style
             } else {
                 match entry.kind {
                     EntryKind::Dir => theme::DIRECTORY,

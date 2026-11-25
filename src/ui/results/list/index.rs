@@ -39,7 +39,7 @@ pub fn render(frame: &mut Frame, area: Rect, results: &mut Results) {
 /// highlighted for filename hits
 fn hit_line(hit: &FileMatches, selected: bool) -> Line<'static> {
     let (prefix, style) = if selected {
-        ("> ", theme::SELECTED_FILE)
+        ("> ", theme::ACTIVE_SELECTION)
     } else {
         ("  ", theme::FILE_LIST_BASE)
     };

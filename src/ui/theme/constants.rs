@@ -6,7 +6,13 @@ pub const BORDER_FOCUSED: Style = Style::new().fg(Color::Rgb(100, 100, 200));
 
 pub const FILE_LIST_BASE: Style = Style::reset().fg(Color::DarkGray);
 
-pub const SELECTED_FILE: Style = Style::reset()
+/// The selection your keys move: the middle navigator column and the results list
+pub const ACTIVE_SELECTION: Style = Style::reset()
+    .fg(Color::Rgb(0xCF, 0x42, 0x5C))
+    .add_modifier(Modifier::BOLD);
+
+/// Marks the current directory inside the parent column; it is not movable
+pub const PARENT_SELECTION: Style = Style::reset()
     .fg(Color::Rgb(255, 180, 50))
     .add_modifier(Modifier::BOLD);
 
