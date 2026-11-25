@@ -1,26 +1,55 @@
 use std::path::PathBuf;
 
-use clap::Parser;
+use clap::{Parser, Subcommand};
+
+use crate::shell::types::Shell;
 
 #[derive(Parser)]
-#[command(name = "visor", version, about = "A ranger-style file navigator with content and filename search")]
+#[command(
+    name = "visor",
+    version,
+    about = "A ranger-style file navigator with content and filename search"
+)]
 pub struct Cli {
-    /// The search keyword or pattern
-    pub keyword: String,
+    #[command(subcommand)]
+    pub command: Option<Commands>,
 
-    /// Directory to search in (defaults to current directory)
-    #[arg(short = 'd', long)]
+    /// Directory to open (defaults to the current directory)
     pub dir: Option<PathBuf>,
 
-    /// Filter by file extension (e.g. "rs", "py")
+    /// Open straight into :match results for this keyword or pattern
+    #[arg(
+        short = 'm',
+        long = "match",
+        value_name = "KEYWORD",
+        conflicts_with = "file"
+    )]
+    pub match_query: Option<String>,
+
+    /// Open straight into :file results for this file name or pattern
+    #[arg(short = 'f', long = "file", value_name = "NAME")]
+    pub file: Option<String>,
+
+    /// Only search files with this extension (e.g. "rs", "py")
     #[arg(long, short = 'x')]
     pub ext: Option<String>,
 
-    /// Enable case-sensitive search
+    /// Start with case-sensitive search
     #[arg(long, short = 'c')]
     pub case_sensitive: bool,
 
-    /// Enable exact/word-boundary match
+    /// Start with exact (whole-word) search
     #[arg(long, short = 'e')]
     pub exact: bool,
+
+    /// File where the shell wrapper reads the directory to cd into
+    #[arg(long, hide = true, global = true)]
+    pub cwd_file: Option<PathBuf>,
+}
+
+#[derive(Subcommand)]
+pub enum Commands {
+    /// Print the shell function that lets visor change your directory.
+    /// Add `eval "$(visor init zsh)"` to ~/.zshrc
+    Init { shell: Shell },
 }

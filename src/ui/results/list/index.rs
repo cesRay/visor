@@ -1,13 +1,14 @@
 use ratatui::Frame;
 use ratatui::layout::Rect;
 use ratatui::style::Style;
+use ratatui::text::{Line, Span};
 use ratatui::widgets::{Block, Borders};
 
-use crate::ui::theme;
-use crate::app::App;
+use crate::results::types::Results;
+use crate::search::types::FileMatches;
+use crate::ui::{rows, theme};
 
-pub fn render(frame: &mut Frame, area: Rect, app: &mut App) {
-    // Render the border block
+pub fn render(frame: &mut Frame, area: Rect, results: &mut Results) {
     let block = Block::default()
         .borders(Borders::ALL)
         .title(" Files ")
@@ -15,67 +16,62 @@ pub fn render(frame: &mut Frame, area: Rect, app: &mut App) {
     let inner = block.inner(area);
     frame.render_widget(block, area);
 
-    let selected = app.file_list_state.selected().unwrap_or(0);
-    let inner_height = inner.height as usize;
+    if results.hits.is_empty() {
+        let msg = Line::from(Span::styled("  No matches found", theme::NO_RESULTS));
+        rows::render(frame, inner, vec![msg], theme::FILE_LIST_BASE);
+        return;
+    }
 
-    // Compute scroll offset to keep selected item visible
-    let scroll = if inner_height == 0 {
-        0
-    } else if selected < app.file_list_scroll {
-        selected
-    } else if selected >= app.file_list_scroll + inner_height {
-        selected - inner_height + 1
+    results.list_scroll =
+        rows::keep_visible(results.selected, inner.height as usize, results.list_scroll);
+    let lines = results
+        .hits
+        .iter()
+        .enumerate()
+        .skip(results.list_scroll)
+        .take(inner.height as usize)
+        .map(|(i, hit)| hit_line(hit, i == results.selected))
+        .collect();
+    rows::render(frame, inner, lines, theme::FILE_LIST_BASE);
+}
+
+/// `path (count)` for content hits; the path with the matched part
+/// highlighted for filename hits
+fn hit_line(hit: &FileMatches, selected: bool) -> Line<'static> {
+    let (prefix, style) = if selected {
+        ("> ", theme::SELECTED_FILE)
     } else {
-        app.file_list_scroll
+        ("  ", theme::FILE_LIST_BASE)
     };
-    app.file_list_scroll = scroll;
-
-    let buf = frame.buffer_mut();
-
-    for row in 0..inner_height {
-        let file_idx = scroll + row;
-        let y = inner.y + row as u16;
-
-        // Determine text and style for this row
-        let (text, style) = if file_idx < app.results.len() {
-            let fm = &app.results[file_idx];
-            let label = format!("{} ({})", fm.relative_path, fm.matches.len());
-            if file_idx == selected {
-                (format!("> {label}"), theme::SELECTED_FILE)
-            } else {
-                (format!("  {label}"), theme::FILE_LIST_BASE)
-            }
-        } else {
-            (String::new(), theme::FILE_LIST_BASE)
-        };
-
-        // Write each cell explicitly
-        let chars: Vec<char> = text.chars().collect();
-        for col in 0..inner.width {
-            let x = inner.x + col;
-            let cell = &mut buf[(x, y)];
-            cell.reset();
-            cell.set_style(style);
-            if (col as usize) < chars.len() {
-                cell.set_char(chars[col as usize]);
-            } else {
-                cell.set_char(' ');
-            }
-        }
+    let mut spans = vec![Span::styled(prefix, style)];
+    spans.extend(highlighted(&hit.relative_path, &hit.name_ranges, style));
+    if !hit.matches.is_empty() {
+        spans.push(Span::styled(format!(" ({})", hit.matches.len()), style));
     }
+    Line::from(spans)
+}
 
-    // Show message if no results
-    if app.results.is_empty() {
-        let msg = "  No matches found";
-        let y = inner.y;
-        for (col, ch) in msg.chars().enumerate() {
-            if col as u16 >= inner.width {
-                break;
-            }
-            let cell = &mut buf[(inner.x + col as u16, y)];
-            cell.reset();
-            cell.set_char(ch);
-            cell.set_style(Style::reset().fg(ratatui::style::Color::DarkGray));
+/// Splits `text` into spans, styling the byte `ranges` as matches
+pub fn highlighted(text: &str, ranges: &[(usize, usize)], base: Style) -> Vec<Span<'static>> {
+    let mut spans = Vec::new();
+    let mut last = 0;
+    for &(start, end) in ranges {
+        let start = start.min(text.len()).max(last);
+        let end = end.min(text.len());
+        if start >= end || !text.is_char_boundary(start) || !text.is_char_boundary(end) {
+            continue;
         }
+        if start > last {
+            spans.push(Span::styled(text[last..start].to_string(), base));
+        }
+        spans.push(Span::styled(
+            text[start..end].to_string(),
+            theme::MATCH_HIGHLIGHT,
+        ));
+        last = end;
     }
+    if last < text.len() {
+        spans.push(Span::styled(text[last..].to_string(), base));
+    }
+    spans
 }

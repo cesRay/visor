@@ -1,96 +1,68 @@
-use std::path::Path;
 use std::sync::Mutex;
+use std::sync::atomic::{AtomicBool, Ordering};
 
-use grep_searcher::SearcherBuilder;
 use grep_searcher::sinks::UTF8;
-use ignore::WalkBuilder;
+use grep_searcher::{BinaryDetection, SearcherBuilder};
+use ignore::WalkState;
 
-use super::matcher;
-use super::types::{FileMatches, MatchInfo, SearchError, SearchOptions};
+use super::types::{FileMatches, MatchInfo, SearchError, SearchRequest};
+use super::{matcher, passes_extension_filter, relative_path, walker};
 
+/// Finds every line under `request.base` that matches `request.query`
 pub fn search(
-    base_path: &Path,
-    query: &str,
-    options: &SearchOptions,
+    request: &SearchRequest,
+    cancel: &AtomicBool,
 ) -> Result<Vec<FileMatches>, SearchError> {
-    let matcher = matcher::build(query, options)?;
-    let ext_filter = options.extension_filter.clone();
-    let base = base_path.to_path_buf();
-
+    let matcher = matcher::build(&request.query, &request.options)?;
+    let ext_filter = request.options.extension_filter.as_deref();
+    let base = request.base.as_path();
     let all_results: Mutex<Vec<FileMatches>> = Mutex::new(Vec::new());
 
-    let walker = WalkBuilder::new(base_path)
-        .hidden(true)
-        .git_ignore(true)
-        .threads(std::thread::available_parallelism().map(|n| n.get()).unwrap_or(4))
-        .build_parallel();
-
-    walker.run(|| {
+    walker(base).run(|| {
         // Each thread gets its own searcher (they're not Send)
-        let mut searcher = SearcherBuilder::new().line_number(true).build();
+        let mut searcher = SearcherBuilder::new()
+            .line_number(true)
+            .binary_detection(BinaryDetection::quit(b'\x00'))
+            .build();
         let matcher = matcher.clone();
-        let ext_filter = ext_filter.clone();
-        let base = base.clone();
         let all_results = &all_results;
 
         Box::new(move |entry| {
-            let entry = match entry {
-                Ok(e) => e,
-                Err(_) => return ignore::WalkState::Continue,
-            };
-
-            let path = entry.path();
-
-            if !path.is_file() {
-                return ignore::WalkState::Continue;
+            if cancel.load(Ordering::Relaxed) {
+                return WalkState::Quit;
             }
-
-            // Apply extension filter
-            if let Some(ref ext_filter) = ext_filter {
-                match path.extension().and_then(|e| e.to_str()) {
-                    Some(ext) if ext == ext_filter.as_str() => {}
-                    _ => return ignore::WalkState::Continue,
-                }
+            let Ok(entry) = entry else {
+                return WalkState::Continue;
+            };
+            let path = entry.path();
+            if !path.is_file() || !passes_extension_filter(path, ext_filter) {
+                return WalkState::Continue;
             }
 
             let mut file_matches: Vec<MatchInfo> = Vec::new();
-
             let result = searcher.search_path(
                 &matcher,
                 path,
                 UTF8(|line_number, line_content| {
-                    let match_ranges = matcher::find_ranges(&matcher, line_content);
                     file_matches.push(MatchInfo {
                         line_number,
-                        line_content: line_content.trim_end_matches('\n').to_string(),
-                        match_ranges,
+                        match_ranges: matcher::find_ranges(&matcher, line_content),
                     });
                     Ok(true)
                 }),
             );
 
-            if result.is_err() {
-                return ignore::WalkState::Continue;
-            }
-
-            if !file_matches.is_empty() {
-                let fm = FileMatches {
+            if result.is_ok() && !file_matches.is_empty() {
+                all_results.lock().unwrap().push(FileMatches {
                     path: path.to_path_buf(),
-                    relative_path: path
-                        .strip_prefix(&base)
-                        .unwrap_or(path)
-                        .to_string_lossy()
-                        .to_string(),
+                    relative_path: relative_path(path, base),
                     matches: file_matches,
-                };
-                all_results.lock().unwrap().push(fm);
+                    name_ranges: Vec::new(),
+                });
             }
-
-            ignore::WalkState::Continue
+            WalkState::Continue
         })
     });
 
-    let mut results = all_results.into_inner().unwrap();
-    results.sort_by(|a, b| a.relative_path.cmp(&b.relative_path));
-    Ok(results)
+    Ok(all_results.into_inner().unwrap())
 }

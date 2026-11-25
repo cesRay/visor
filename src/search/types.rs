@@ -1,14 +1,14 @@
 use std::path::PathBuf;
+use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::mpsc::Receiver;
 
 /// A single match occurrence within a file
 #[derive(Debug, Clone)]
-#[allow(dead_code)]
 pub struct MatchInfo {
     /// 1-based line number
     pub line_number: u64,
-    /// The full text of the line (trailing newline stripped)
-    pub line_content: String,
-    /// Byte offset ranges within line_content where the match occurs
+    /// Byte offset ranges within the line where the match occurs
     pub match_ranges: Vec<(usize, usize)>,
 }
 
@@ -19,12 +19,14 @@ pub struct FileMatches {
     pub path: PathBuf,
     /// Path relative to the search base folder (for display)
     pub relative_path: String,
-    /// All matches in this file, sorted by line number
+    /// All matches in this file, sorted by line number. Empty for filename search.
     pub matches: Vec<MatchInfo>,
+    /// Byte ranges within relative_path that matched a filename search
+    pub name_ranges: Vec<(usize, usize)>,
 }
 
 /// Options that control search behavior
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct SearchOptions {
     /// When true, search is case-sensitive
     pub case_sensitive: bool,
@@ -34,13 +36,37 @@ pub struct SearchOptions {
     pub extension_filter: Option<String>,
 }
 
-impl Default for SearchOptions {
-    fn default() -> Self {
-        Self {
-            case_sensitive: false,
-            exact_match: false,
-            extension_filter: None,
-        }
+/// Which search a request runs
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum SearchKind {
+    /// `:match`: search file contents
+    Content,
+    /// `:file`: search file names
+    Filename,
+}
+
+/// Everything needed to run (or re-run) one search
+#[derive(Debug, Clone)]
+pub struct SearchRequest {
+    pub kind: SearchKind,
+    pub query: String,
+    /// Directory searched recursively
+    pub base: PathBuf,
+    pub options: SearchOptions,
+}
+
+pub type SearchOutcome = Result<Vec<FileMatches>, SearchError>;
+
+/// A search running on a background thread. Dropping it cancels the search.
+pub struct SearchHandle {
+    pub request: SearchRequest,
+    pub receiver: Receiver<SearchOutcome>,
+    pub(super) cancel: Arc<AtomicBool>,
+}
+
+impl Drop for SearchHandle {
+    fn drop(&mut self) {
+        self.cancel.store(true, Ordering::Relaxed);
     }
 }
 
@@ -53,7 +79,20 @@ pub enum SearchError {
 impl std::fmt::Display for SearchError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            SearchError::Regex(e) => write!(f, "Regex error: {e}"),
+            SearchError::Regex(e) => {
+                // Regex errors span several lines with a caret diagram; the
+                // last line holds the reason, which fits the status bar
+                let text = e.to_string();
+                let reason = text
+                    .lines()
+                    .rfind(|l| !l.trim().is_empty())
+                    .unwrap_or(&text);
+                write!(
+                    f,
+                    "Invalid pattern: {}",
+                    reason.trim().trim_start_matches("error: ")
+                )
+            }
         }
     }
 }

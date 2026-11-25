@@ -15,3 +15,6 @@ grep-searcher = "0.1"
 grep-matcher = "0.1"
 ignore = "0.4"
 anyhow = "1"
+
+[dev-dependencies]
+tempfile = "3"

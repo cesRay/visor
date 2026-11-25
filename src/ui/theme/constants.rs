@@ -17,21 +17,15 @@ pub const MATCH_HIGHLIGHT: Style = Style::new()
     .bg(Color::Yellow)
     .add_modifier(Modifier::BOLD);
 
-pub const KEY_LABEL: Style = Style::new()
-    .fg(Color::Cyan)
-    .add_modifier(Modifier::BOLD);
+pub const KEY_LABEL: Style = Style::new().fg(Color::Cyan).add_modifier(Modifier::BOLD);
 
 pub const STATUS_TEXT: Style = Style::new().fg(Color::Gray);
 
-pub const TOGGLE_ON: Style = Style::new()
-    .fg(Color::Green)
-    .add_modifier(Modifier::BOLD);
+pub const TOGGLE_ON: Style = Style::new().fg(Color::Green).add_modifier(Modifier::BOLD);
 
 pub const TOGGLE_OFF: Style = Style::new().fg(Color::DarkGray);
 
-pub const HEADER_QUERY: Style = Style::new()
-    .fg(Color::Yellow)
-    .add_modifier(Modifier::BOLD);
+pub const HEADER_QUERY: Style = Style::new().fg(Color::Yellow).add_modifier(Modifier::BOLD);
 
 pub const MATCH_COUNT: Style = Style::new().fg(Color::Rgb(180, 180, 255));
 
@@ -42,3 +36,19 @@ pub const NO_RESULTS: Style = Style::new()
 pub const PREVIEW_TITLE: Style = Style::new()
     .fg(Color::Rgb(255, 180, 50))
     .add_modifier(Modifier::BOLD);
+
+pub const DIRECTORY: Style = Style::reset()
+    .fg(Color::Rgb(110, 150, 255))
+    .add_modifier(Modifier::BOLD);
+
+pub const BROKEN_LINK: Style = Style::reset().fg(Color::Rgb(200, 80, 80));
+
+pub const PATH_TEXT: Style = Style::new()
+    .fg(Color::Rgb(255, 180, 50))
+    .add_modifier(Modifier::BOLD);
+
+pub const ERROR_TEXT: Style = Style::new().fg(Color::Rgb(230, 90, 90));
+
+pub const COMMAND_TEXT: Style = Style::new().fg(Color::White);
+
+pub const SPINNER: Style = Style::new().fg(Color::Cyan);
