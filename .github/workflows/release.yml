@@ -27,7 +27,7 @@ jobs:
           - target: arm-unknown-linux-musleabihf
             deb_arch: armhf
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - uses: dtolnay/rust-toolchain@stable
         with:
@@ -62,7 +62,7 @@ jobs:
           dpkg-deb --field target/visor_${{ matrix.deb_arch }}.deb Architecture | grep -qx "${{ matrix.deb_arch }}"
           dpkg-deb --field target/visor_${{ matrix.deb_arch }}.deb Depends | grep -q vim
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: visor-${{ matrix.deb_arch }}
           path: target/visor_${{ matrix.deb_arch }}.deb
@@ -73,7 +73,7 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           path: dist
           merge-multiple: true
