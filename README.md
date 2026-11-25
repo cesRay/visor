@@ -19,8 +19,12 @@ Move through directories with the arrow keys, preview files as you go, search in
 ### Homebrew
 
 ```bash
-brew install cesRay/tap/visor
+brew tap cesRay/tap
+brew trust --formula cesray/tap/visor   # Homebrew 7+ only loads trusted third-party formulae
+brew install visor
 ```
+
+On older Homebrew versions without `brew trust`, run `brew install cesRay/tap/visor` instead.
 
 Homebrew also installs vim, which visor uses to open every file. After the first install, `brew upgrade visor` keeps it up to date.
 
