@@ -1,0 +1,92 @@
+# Builds the Raspberry Pi OS packages (.deb for arm64 and armhf) and attaches
+# them to the GitHub release when a v* tag is pushed. Run it by hand
+# (workflow_dispatch) to build the packages as artifacts without releasing.
+name: release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  deb:
+    name: deb (${{ matrix.deb_arch }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # 64-bit Raspberry Pi OS (Pi 3, 4, 5, Zero 2 W)
+          - target: aarch64-unknown-linux-musl
+            deb_arch: arm64
+          # 32-bit Raspberry Pi OS. ARMv6 hard-float runs on every Pi,
+          # including the Pi 1 and Zero, like Raspberry Pi OS itself.
+          - target: arm-unknown-linux-musleabihf
+            deb_arch: armhf
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - uses: taiki-e/install-action@v2
+        with:
+          # Pinned, so a new release of either tool cannot break a tag build
+          tool: cross@0.2.5,cargo-deb@3.8.0
+
+      - name: Check that the tag matches the Cargo.toml version
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          version="$(cargo metadata --no-deps --format-version 1 | jq -r '.packages[0].version')"
+          if [ "v$version" != "$GITHUB_REF_NAME" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME does not match Cargo.toml version $version"
+            exit 1
+          fi
+
+      - name: Build static binary
+        run: cross build --release --locked --target ${{ matrix.target }}
+
+      - name: Build .deb
+        run: >
+          cargo deb --no-build --no-strip
+          --target ${{ matrix.target }}
+          --output target/visor_${{ matrix.deb_arch }}.deb
+
+      - name: Check package
+        run: |
+          dpkg-deb --info target/visor_${{ matrix.deb_arch }}.deb
+          dpkg-deb --field target/visor_${{ matrix.deb_arch }}.deb Architecture | grep -qx "${{ matrix.deb_arch }}"
+          dpkg-deb --field target/visor_${{ matrix.deb_arch }}.deb Depends | grep -q vim
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: visor-${{ matrix.deb_arch }}
+          path: target/visor_${{ matrix.deb_arch }}.deb
+          if-no-files-found: error
+
+  release:
+    needs: deb
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Checksums
+        working-directory: dist
+        run: sha256sum *.deb > SHA256SUMS
+
+      - name: Upload to the GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          gh release view "$TAG" -R "$GITHUB_REPOSITORY" >/dev/null 2>&1 \
+            || gh release create "$TAG" -R "$GITHUB_REPOSITORY" --title "visor ${TAG#v}" --generate-notes
+          gh release upload "$TAG" dist/* -R "$GITHUB_REPOSITORY" --clobber

@@ -28,6 +28,18 @@ On older Homebrew versions without `brew trust`, run `brew install cesRay/tap/vi
 
 Homebrew also installs vim, which visor uses to open every file. After the first install, `brew upgrade visor` keeps it up to date.
 
+### Raspberry Pi OS
+
+Works on 64-bit and 32-bit Raspberry Pi OS (every Pi model, including the Pi Zero and Pi 1):
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/cesRay/visor/main/install.sh | sh
+```
+
+The script downloads the `.deb` for your Pi from the latest GitHub release and installs it with apt, which also installs vim. To install by hand instead, download `visor_arm64.deb` (64-bit) or `visor_armhf.deb` (32-bit) from the [releases page](https://github.com/cesRay/visor/releases/latest), then run `sudo apt install ./visor_arm64.deb`. Run `dpkg --print-architecture` if you are not sure which one you need.
+
+On Ubuntu, Debian and other Linux systems, use Homebrew as above.
+
 ### From source
 
 Requires [Rust](https://www.rust-lang.org/tools/install) 1.88+ and vim on your `PATH`.
@@ -45,7 +57,7 @@ A program cannot change the directory of the shell that started it. visor ships 
 | Shell | File | Line |
 |-------|------|------|
 | zsh | `~/.zshrc` | `eval "$(visor init zsh)"` |
-| bash | `~/.bashrc` | `eval "$(visor init bash)"` |
+| bash (also Raspberry Pi OS) | `~/.bashrc` | `eval "$(visor init bash)"` |
 | fish | `~/.config/fish/config.fish` | `visor init fish \| source` |
 
 Without it, visor still works, but on exit it only prints the chosen directory.
@@ -152,11 +164,13 @@ src/
     rows/            shared row renderer
     layout/  theme/
 packaging/homebrew/  formula source and bump script for cesRay/homebrew-tap
+install.sh           Raspberry Pi OS installer (downloads the release .deb)
+.github/workflows/   release.yml builds the arm64 / armhf .deb packages
 ```
 
 ### Releasing
 
-1. Bump `version` in `Cargo.toml`, commit, then tag and push: `git tag v0.2.0 && git push --tags`.
+1. Bump `version` in `Cargo.toml`, commit, then tag and push: `git tag v0.2.0 && git push --tags`. The `release` workflow builds the Raspberry Pi OS packages (`visor_arm64.deb`, `visor_armhf.deb`) and attaches them to the GitHub release.
 2. Run `packaging/homebrew/bump.sh 0.2.0` to update the formula's URL and SHA-256.
 3. Copy `packaging/homebrew/visor.rb` to `Formula/visor.rb` in `cesRay/homebrew-tap` and push.
 
