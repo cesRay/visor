@@ -11,7 +11,8 @@ use types::{Command, ParseError};
 pub fn parse(input: &str) -> Result<Command, ParseError> {
     let input = input.trim();
     let (name, arg) = match input.split_once(char::is_whitespace) {
-        Some((name, arg)) => (name, unquote(arg.trim())),
+        // Trim again after unquoting, so `"  "` counts as missing
+        Some((name, arg)) => (name, unquote(arg.trim()).trim()),
         None => (input, ""),
     };
 
@@ -20,7 +21,7 @@ pub fn parse(input: &str) -> Result<Command, ParseError> {
         "q" | "quit" => Ok(Command::Quit),
         "match" | "m" if arg.is_empty() => Err(ParseError::MissingArgument(":match <keyword>")),
         "match" | "m" => Ok(Command::Match(arg.to_string())),
-        "file" | "f" if arg.is_empty() => Err(ParseError::MissingArgument(":file <name>")),
+        "file" | "f" if arg.is_empty() => Err(ParseError::MissingArgument(":file <path>")),
         "file" | "f" => Ok(Command::File(arg.to_string())),
         other => Err(ParseError::Unknown(other.to_string())),
     }

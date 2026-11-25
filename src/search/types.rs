@@ -21,8 +21,8 @@ pub struct FileMatches {
     pub relative_path: String,
     /// All matches in this file, sorted by line number. Empty for filename search.
     pub matches: Vec<MatchInfo>,
-    /// Byte ranges within relative_path that matched a filename search
-    pub name_ranges: Vec<(usize, usize)>,
+    /// Byte ranges within relative_path that matched a `:file` search
+    pub path_ranges: Vec<(usize, usize)>,
 }
 
 /// Options that control search behavior
@@ -41,7 +41,7 @@ pub struct SearchOptions {
 pub enum SearchKind {
     /// `:match`: search file contents
     Content,
-    /// `:file`: search file names
+    /// `:file`: fuzzy search on relative paths, like VS Code's Cmd+P
     Filename,
 }
 

@@ -28,7 +28,11 @@ fn reports_errors() {
     );
     assert_eq!(
         parse("file   "),
-        Err(ParseError::MissingArgument(":file <name>"))
+        Err(ParseError::MissingArgument(":file <path>"))
     );
     assert_eq!(parse("open x"), Err(ParseError::Unknown("open".into())));
+    assert_eq!(
+        parse("file \"  \""),
+        Err(ParseError::MissingArgument(":file <path>"))
+    );
 }

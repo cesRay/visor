@@ -2,7 +2,7 @@
 
 A fast, ranger-style **file navigator** for the terminal, with content search and filename search built in. Written in Rust.
 
-Move through directories with the arrow keys, preview files as you go, search inside files with `:match` or by name with `:file`, and open anything in vim. Press `Enter` on a directory (or `q`) and your shell lands in that directory when visor closes.
+Move through directories with the arrow keys, preview files as you go, search inside files with `:match` or find files by path with `:file` (like VS Code's Cmd+P), and open anything in vim. Press `Enter` on a directory (or `q`) and your shell lands in that directory when visor closes.
 
 ```
   visor  ~/proj/src
@@ -78,7 +78,7 @@ visor -m "fn main" -c -e # case-sensitive, whole-word search
 |------|-------------|
 | `[DIR]` | Directory to open (defaults to `.`) |
 | `-m, --match <KEYWORD>` | Start with `:match` results for this keyword or regex |
-| `-f, --file <NAME>` | Start with `:file` results for this name or regex |
+| `-f, --file <PATH>` | Start with `:file` results for this (fuzzy) path |
 | `-x, --ext <EXT>` | Only search files with this extension (e.g. `rs`, `py`) |
 | `-c, --case-sensitive` | Start with case-sensitive search |
 | `-e, --exact` | Start with exact (whole-word) search |
@@ -109,10 +109,13 @@ To open a directory that is literally called `init`, write `visor ./init`.
 | Command | Action |
 |---------|--------|
 | `:match <keyword>` | Search file contents below the current directory |
-| `:file <name>` | Search file names below the current directory |
+| `:file <path>` | Find files by relative path below the current directory, fuzzy, like VS Code's Cmd+P |
 | `:q` | Exit without changing directory |
 
-Both searches are case-insensitive regular expressions by default, skip hidden files and respect `.gitignore`. `:file` matches the file name only, not the directories above it. `Esc` closes the command line.
+Both searches skip hidden files and respect `.gitignore`. `Esc` closes the command line.
+
+- `:match` takes a case-insensitive regular expression.
+- `:file` matches the path relative to the current directory, like VS Code's Cmd+P. The letters only need to appear in order, so `Button/index.tsx`, `btn/idx` and `btnidx` all find `components/ui/Button/index.tsx`. Separate words with spaces to require all of them (`vessel pin`). Results come best match first. In the results, `c` makes it case-sensitive and `e` requires the exact text instead of a fuzzy match.
 
 ### Results
 
@@ -151,7 +154,7 @@ src/
   command/           parsing of :match / :file / :q
   search/            background search worker
     content/         keyword search inside files
-    filename/        file name search
+    filename/        fuzzy path search (:file)
     matcher/         shared regex builder (case, exact)
   results/           results view state (selection, preview scroll)
   preview/           file and directory previews (binary / size checks)
@@ -183,7 +186,8 @@ install.sh           Raspberry Pi OS installer (downloads the release .deb)
 | [clap](https://github.com/clap-rs/clap) | CLI argument parsing |
 | [grep-regex](https://github.com/BurntSushi/ripgrep) / [grep-searcher](https://github.com/BurntSushi/ripgrep) | Regex matching and line search (from ripgrep) |
 | [ignore](https://github.com/BurntSushi/ripgrep) | Fast parallel directory walking that respects `.gitignore` |
+| [nucleo-matcher](https://github.com/helix-editor/nucleo) | Path-aware fuzzy matching for `:file` (MPL-2.0) |
 
 ## License
 
-MIT
+MIT. Third-party licenses are listed in [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).

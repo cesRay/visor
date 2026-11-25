@@ -5,7 +5,7 @@ use std::fmt;
 pub enum Command {
     /// `:match <keyword>`: search file contents
     Match(String),
-    /// `:file <name>`: search file names
+    /// `:file <path>`: fuzzy search on relative paths
     File(String),
     /// `:q`: quit without changing directory
     Quit,
@@ -22,7 +22,7 @@ pub enum ParseError {
 impl fmt::Display for ParseError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            ParseError::Empty => write!(f, "Type a command: :match <keyword>, :file <name>, :q"),
+            ParseError::Empty => write!(f, "Type a command: :match <keyword>, :file <path>, :q"),
             ParseError::MissingArgument(usage) => write!(f, "Usage: {usage}"),
             ParseError::Unknown(name) => write!(f, "Unknown command: :{name}"),
         }

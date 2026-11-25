@@ -39,14 +39,17 @@ pub fn spawn(request: SearchRequest) -> SearchHandle {
     }
 }
 
-/// Runs `request` on the current thread. Results are sorted by path.
+/// Runs `request` on the current thread. Content results are sorted by
+/// path; filename results come best match first.
 pub fn run(request: &SearchRequest, cancel: &AtomicBool) -> SearchOutcome {
-    let mut results = match request.kind {
-        SearchKind::Content => content::search(request, cancel)?,
-        SearchKind::Filename => filename::search(request, cancel)?,
-    };
-    results.sort_by(|a, b| a.relative_path.cmp(&b.relative_path));
-    Ok(results)
+    match request.kind {
+        SearchKind::Content => {
+            let mut results = content::search(request, cancel)?;
+            results.sort_by(|a, b| a.relative_path.cmp(&b.relative_path));
+            Ok(results)
+        }
+        SearchKind::Filename => Ok(filename::search(request, cancel)),
+    }
 }
 
 /// Parallel walker that skips hidden files and respects .gitignore

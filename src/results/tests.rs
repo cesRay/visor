@@ -14,7 +14,7 @@ fn hit(path: &str, lines: &[u64]) -> FileMatches {
                 match_ranges: Vec::new(),
             })
             .collect(),
-        name_ranges: Vec::new(),
+        path_ranges: Vec::new(),
     }
 }
 

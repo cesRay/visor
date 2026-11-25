@@ -71,7 +71,7 @@ fn results_view_shows_query_and_hits() {
         path,
         relative_path: "readme.md".into(),
         matches: Vec::new(),
-        name_ranges: vec![(0, 4)],
+        path_ranges: vec![(0, 4)],
     };
     app.results = Some(Results::new(request, vec![hit]));
     app.view = View::Results;

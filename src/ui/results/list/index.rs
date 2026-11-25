@@ -44,7 +44,7 @@ fn hit_line(hit: &FileMatches, selected: bool) -> Line<'static> {
         ("  ", theme::FILE_LIST_BASE)
     };
     let mut spans = vec![Span::styled(prefix, style)];
-    spans.extend(highlighted(&hit.relative_path, &hit.name_ranges, style));
+    spans.extend(highlighted(&hit.relative_path, &hit.path_ranges, style));
     if !hit.matches.is_empty() {
         spans.push(Span::styled(format!(" ({})", hit.matches.len()), style));
     }

@@ -16,6 +16,7 @@ grep-searcher = "0.1"
 grep-matcher = "0.1"
 ignore = "0.4"
 anyhow = "1"
+nucleo-matcher = { version = "0.3", default-features = false, features = ["unicode-casefold", "unicode-normalization"] }
 
 [dev-dependencies]
 tempfile = "3"
@@ -39,4 +40,5 @@ cd into it (needs `eval "$(visor init bash)"` in ~/.bashrc)."""
 assets = [
     ["target/release/visor", "usr/bin/", "755"],
     ["README.md", "usr/share/doc/visor/README.md", "644"],
+    ["THIRD-PARTY-NOTICES.md", "usr/share/doc/visor/THIRD-PARTY-NOTICES.md", "644"],
 ]

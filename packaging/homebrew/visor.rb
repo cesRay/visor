@@ -14,6 +14,7 @@ class Visor < Formula
 
   def install
     system "cargo", "install", *std_cargo_args
+    doc.install "README.md", "THIRD-PARTY-NOTICES.md"
   end
 
   def caveats

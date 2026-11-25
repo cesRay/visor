@@ -58,7 +58,7 @@ pub fn search(
                     path: path.to_path_buf(),
                     relative_path: relative_path(path, base),
                     matches: file_matches,
-                    name_ranges: Vec::new(),
+                    path_ranges: Vec::new(),
                 });
             }
             WalkState::Continue

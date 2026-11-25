@@ -67,32 +67,93 @@ fn content_matches_carry_line_numbers_and_ranges() {
 }
 
 #[test]
-fn filename_search_matches_name_only_and_offsets_ranges() {
+fn file_search_matches_relative_paths_like_cmd_p() {
     let tmp = tree();
-    // "src" is in a directory name, not a file name, so nothing matches
-    assert!(paths(SearchKind::Filename, "src", &tmp, SearchOptions::default()).is_empty());
+    fs::create_dir_all(tmp.path().join("components/ui/Button")).unwrap();
+    fs::write(tmp.path().join("components/ui/Button/index.tsx"), "").unwrap();
+    fs::write(tmp.path().join("components/ui/index.tsx"), "").unwrap();
 
+    let found = paths(
+        SearchKind::Filename,
+        "Button/index.tsx",
+        &tmp,
+        SearchOptions::default(),
+    );
+    assert_eq!(
+        found.first().map(String::as_str),
+        Some("components/ui/Button/index.tsx")
+    );
+
+    // Fuzzy: the letters only have to appear in order
+    let found = paths(
+        SearchKind::Filename,
+        "btnidx",
+        &tmp,
+        SearchOptions::default(),
+    );
+    assert_eq!(found, ["components/ui/Button/index.tsx"]);
+
+    // Directory names count too
+    let found = paths(
+        SearchKind::Filename,
+        "src main",
+        &tmp,
+        SearchOptions::default(),
+    );
+    assert_eq!(found, ["src/main.rs"]);
+}
+
+#[test]
+fn file_search_ranks_best_match_first_and_highlights_it() {
+    let tmp = tree();
     let req = request(SearchKind::Filename, "app", &tmp, SearchOptions::default());
     let results = run(&req, &AtomicBool::new(false)).unwrap();
     let found: Vec<_> = results.iter().map(|f| f.relative_path.as_str()).collect();
     assert_eq!(found, ["app.rs", "src/app_state.rs"]);
+
     let nested = &results[1];
-    let (s, e) = nested.name_ranges[0];
-    assert_eq!(&nested.relative_path[s..e], "app");
+    let highlighted: String = nested
+        .path_ranges
+        .iter()
+        .map(|&(s, e)| &nested.relative_path[s..e])
+        .collect();
+    assert_eq!(highlighted, "app");
 }
 
 #[test]
-fn filename_exact_match_needs_whole_word() {
+fn file_search_exact_needs_contiguous_text_and_case_is_respected() {
     let tmp = tree();
-    let options = SearchOptions {
+    let exact = SearchOptions {
         exact_match: true,
         ..Default::default()
     };
-    // "app_state" is one word, so only app.rs matches
-    assert_eq!(
-        paths(SearchKind::Filename, "app", &tmp, options),
-        ["app.rs"]
+    assert!(
+        paths(SearchKind::Filename, "apst", &tmp, SearchOptions::default())
+            .contains(&"src/app_state.rs".to_string())
     );
+    assert!(paths(SearchKind::Filename, "apst", &tmp, exact).is_empty());
+
+    let case = SearchOptions {
+        case_sensitive: true,
+        ..Default::default()
+    };
+    assert!(paths(SearchKind::Filename, "APP", &tmp, case).is_empty());
+    assert!(!paths(SearchKind::Filename, "APP", &tmp, SearchOptions::default()).is_empty());
+}
+
+#[test]
+fn file_search_highlights_non_ascii_paths_on_char_boundaries() {
+    let tmp = tree();
+    fs::write(tmp.path().join("café_menü.txt"), "").unwrap();
+    let req = request(SearchKind::Filename, "menü", &tmp, SearchOptions::default());
+    let results = run(&req, &AtomicBool::new(false)).unwrap();
+    let hit = &results[0];
+    let highlighted: String = hit
+        .path_ranges
+        .iter()
+        .map(|&(s, e)| &hit.relative_path[s..e])
+        .collect();
+    assert_eq!(highlighted, "menü");
 }
 
 #[test]
@@ -125,4 +186,25 @@ fn invalid_utf8_line_keeps_the_files_other_matches() {
         .find(|f| f.relative_path == "latin1.txt")
         .unwrap();
     assert_eq!(latin1.matches.len(), 2);
+}
+
+#[test]
+fn file_search_exact_finds_matches_at_the_end_of_non_ascii_paths() {
+    let tmp = tree();
+    fs::write(tmp.path().join("é.txt"), "").unwrap();
+    let exact = SearchOptions {
+        exact_match: true,
+        ..Default::default()
+    };
+    assert_eq!(
+        paths(SearchKind::Filename, "é.txt", &tmp, exact.clone()),
+        ["é.txt"]
+    );
+    assert!(paths(SearchKind::Filename, "txt", &tmp, exact).contains(&"é.txt".to_string()));
+}
+
+#[test]
+fn blank_file_query_finds_nothing() {
+    let tmp = tree();
+    assert!(paths(SearchKind::Filename, "   ", &tmp, SearchOptions::default()).is_empty());
 }

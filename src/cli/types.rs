@@ -26,8 +26,8 @@ pub struct Cli {
     )]
     pub match_query: Option<String>,
 
-    /// Open straight into :file results for this file name or pattern
-    #[arg(short = 'f', long = "file", value_name = "NAME")]
+    /// Open straight into :file results for this (fuzzy) relative path
+    #[arg(short = 'f', long = "file", value_name = "PATH")]
     pub file: Option<String>,
 
     /// Only search files with this extension (e.g. "rs", "py")

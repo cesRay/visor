@@ -1,6 +1,8 @@
 #[path = "types.rs"]
 mod types;
 
+use std::io::IsTerminal;
+
 use anyhow::Context;
 use clap::Parser;
 
@@ -38,6 +40,10 @@ pub fn run() -> anyhow::Result<()> {
         exact_match: cli.exact,
         extension_filter: cli.ext,
     };
+    for query in [&cli.match_query, &cli.file].into_iter().flatten() {
+        anyhow::ensure!(!query.trim().is_empty(), "the search text cannot be blank");
+    }
+
     let mut app = App::new(start, options);
     if let Some(query) = cli.match_query {
         app.start_search(SearchKind::Content, query);
@@ -45,6 +51,11 @@ pub fn run() -> anyhow::Result<()> {
         app.start_search(SearchKind::Filename, query);
     }
 
+    // ratatui::init panics without a terminal (e.g. output piped to a file)
+    anyhow::ensure!(
+        std::io::stdout().is_terminal(),
+        "visor needs an interactive terminal"
+    );
     let mut terminal = ratatui::init();
     let outcome = app.run(&mut terminal);
     ratatui::restore();
