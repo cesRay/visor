@@ -17,7 +17,7 @@ use search::types::SearchOptions;
 const SPINNER_FRAMES: &[&str] = &["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
 
 #[derive(Parser)]
-#[command(name = "lens", version, about = "A CMD+SHIFT+F search tool for the terminal")]
+#[command(name = "visor", version, about = "A ranger-style file navigator with content and filename search")]
 struct Cli {
     /// The search keyword or pattern
     keyword: String,

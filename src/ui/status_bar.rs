@@ -10,7 +10,7 @@ pub fn render_header(frame: &mut Frame, area: Rect, app: &App) {
     let total_matches: usize = app.results.iter().map(|f| f.matches.len()).sum();
 
     let spans = vec![
-        Span::styled("  lens: ", theme::STATUS_TEXT),
+        Span::styled("  visor: ", theme::STATUS_TEXT),
         Span::styled(format!("\"{}\"", app.query), theme::HEADER_QUERY),
         Span::styled("  |  ", theme::STATUS_TEXT),
         Span::styled(

@@ -1,8 +1,9 @@
 [package]
-name = "lens"
+name = "visor"
 version = "0.1.0"
 edition = "2024"
-description = "A CMD+SHIFT+F search tool for the terminal"
+description = "A ranger-style file navigator with content and filename search for the terminal"
+publish = false
 license = "MIT"
 
 [dependencies]
