@@ -4,8 +4,8 @@
 class Visor < Formula
   desc "Ranger-style file navigator with content and filename search"
   homepage "https://github.com/cesRay/visor"
-  url "https://github.com/cesRay/visor/archive/refs/tags/v0.1.1.tar.gz"
-  sha256 "a5ce0da10709e14860418513dbd7698e986923a4dbf63f87467f2f380be5c755"
+  url "https://github.com/cesRay/visor/archive/refs/tags/v0.1.2.tar.gz"
+  sha256 "aec1c320b1826e3053ed0dd9be7b71732992a34b15872acfee07284c83a0dcdf"
   license "MIT"
   head "https://github.com/cesRay/visor.git", branch: "main"
 
